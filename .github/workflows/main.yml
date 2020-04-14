@@ -1,0 +1,30 @@
+name: Deployment k8s
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@master
+
+      - name: Docker Login
+        run: docker login registry.automaticsolutions.ru --username github --password sAY26758
+
+      - name: Build and Push docker image
+        run: |
+          docker build -t registry.automaticsolutions.ru/ac-passive:${{ github.sha }} .
+          docker push registry.automaticsolutions.ru/ac-passive:${{ github.sha }}
+
+      - name: Save DigitalOcean kubeconfig
+        uses: digitalocean/action-doctl@master
+        env:
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        with:
+          args: kubernetes cluster kubeconfig show k8s-1-15-3-do-2-fra1-1569065275277 > $GITHUB_WORKSPACE/.kubeconfig
+
+      - name: Deploy to DigitalOcean Kubernetes
+        run: |
+          CHART_PATH=$GITHUB_WORKSPACE/.helm/ac-passive
+          docker run -i --rm -v $GITHUB_WORKSPACE/.kubeconfig:/root/.kube/config -v $CHART_PATH:/root/.helm alpine/helm upgrade ac-passive /root/.helm --install --set image.tag=${{ github.sha }}

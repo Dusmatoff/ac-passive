@@ -1,0 +1,25 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ include "ac-passive.fullname" . }}
+  labels:
+    {{- include "ac-passive.labels" . | nindent 4 }}
+spec:
+  schedule: "0 0 */7 * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 5
+      template:
+        spec:
+          imagePullSecrets:
+            - name: regcred
+          containers:
+            - name: "{{ .Chart.Name }}-holidayby"
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              args:
+                - "holidayby"
+                - "e3ab0c56fb0b7c7be13aad370a7aa9c3efbfcecbe6400a49c1aae2f8d7f4864185a6536f"
+                - "2018-01-01"
+                - "1"
+          restartPolicy: Never

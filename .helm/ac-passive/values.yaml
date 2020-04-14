@@ -1,0 +1,16 @@
+replicaCount: 1
+
+image:
+  repository: registry.automaticsolutions.ru/ac-passive
+  tag: latest
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  host: ac-passive.leadgenbot.ru
